@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+docker stop ipsec-vpn-server || true
+docker rm ipsec-vpn-server || true
+
 docker run                                  \
     --name ipsec-vpn-server                 \
     --restart=always                        \
@@ -7,7 +10,8 @@ docker run                                  \
     -v /lib/modules:/lib/modules:ro         \
     -p 500:500/udp                          \
     -p 4500:4500/udp                        \
-    -d --privileged                         \
+    --privileged                            \
     -e VPN_DNS_NAME=$(hostname --fqdn)      \
     --env-file vpn-env.txt                  \
+    -d \
     hwdsl2/ipsec-vpn-server
