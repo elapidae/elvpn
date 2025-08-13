@@ -2,4 +2,4 @@
 
 mkdir -p vdsina-root
 sshfs -p28078 root@$vdsina:/ vdsina-root
-
+echo "in vdsina-root"
