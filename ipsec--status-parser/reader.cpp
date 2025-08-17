@@ -14,12 +14,14 @@ LineData::vector reader::read()
         throw 45;
     }
 
-    QFile f("delme-ipsec");
-    if (!f.open(QIODevice::ReadOnly)) {
-        throw "open file";
-    }
-
-    auto all = f.readAll();
+    auto all = []
+    {
+        QFile f("delme-ipsec");
+        if (!f.open(QIODevice::ReadOnly)) {
+            throw "open file";
+        }
+        return f.readAll();
+    }();
 
     return parser::parse_lines( all );
 }

@@ -196,7 +196,8 @@ LineData::vector parser::parse_lines(const QByteArray& lines)
 {
     LineData::vector res;
     auto nlines = lines.split('\n');
-    for (auto &&ll: nlines) {
+    for (auto &&ll: nlines)
+    {
         ll = ll.trimmed();
         if (ll.isEmpty()) continue;
         res.push_back( parse(ll) );
@@ -207,7 +208,11 @@ LineData::vector parser::parse_lines(const QByteArray& lines)
 
 QString LineData::asLine() const
 {
-    return QString("%1%2%3%4%5 | id=%6")
+    auto now_ = QDateTime::currentDateTimeUtc();
+    auto now = now_.toString("yyyy-MM-dd hh:mm:ss");
+
+    return QString("%1 -> %2%3%4%5%6 | id=%7")
+            .arg(now)
             .arg(cnn())
             .arg(ip())
             .arg(time())
