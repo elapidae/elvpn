@@ -4,6 +4,8 @@
 #include <QByteArray>
 #include <QDateTime>
 
+#include <vector>
+
 /*
 ipsec whack --trafficstatus
 #154: "ikev2-cp"[27] 5.149.159.35, type=ESP, add_time=1755279621, inBytes=90686439, outBytes=2012385143, maxBytes=2^63B, id='CN=vpnclient, O=IKEv2 VPN', lease=192.168.43.13/32
@@ -12,10 +14,21 @@ ipsec whack --trafficstatus
 
 struct LineData
 {
-    int num = 0;
-    QByteArray conn_name;
-    int session_id = 0;
-    QByteArray ip;
+    QString asLine() const;
+
+    // conn / name /name_id
+    QString cnn(int len = 20) const;
+    QString ip(int len = 16) const;
+    QString time(int len = 22) const;
+    QString inCount(int len = 14) const;
+    QString outCount(int len = 15) const;
+
+    using vector = std::vector<LineData>;
+
+    int conn_id = 0;
+    QByteArray name;
+    int name_id = 0;
+    QByteArray ip_;
     QByteArray type;
     QDateTime add_time;
     size_t in_bytes = 0;
@@ -25,12 +38,14 @@ struct LineData
 };
 
 
+
+
 class parser
 {
 public:
-    parser();
 
-    static LineData parse(const QByteArray& line);
+    static LineData parse(QByteArray line);
+    static LineData::vector parse_lines(const QByteArray& lines);
 };
 
 

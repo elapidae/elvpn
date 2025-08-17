@@ -1,1 +1,3 @@
 vpn-env.txt
+**/CMakeLists.txt.*
+**/build-*
