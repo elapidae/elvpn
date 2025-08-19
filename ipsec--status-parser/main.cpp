@@ -13,6 +13,19 @@ int main(int argc, char *argv[])
 {
     return gen_func(argc, argv);
 
+    auto bbb = R"(#283: "ikev2-cp"[75] 178.67.193.41, type=ESP, add_time=1755531012, inBytes=14986419, outBytes=776115582, maxBytes=2^63B, id='CN=vpnclient, O=IKEv2 VPN', lease=192.168.43.10/32
+#330: "ikev2-cp"[104] 178.71.108.49, type=ESP, add_time=1755582521, inBytes=727700, outBytes=4055810, maxBytes=2^63B, id='CN=vpnclient, O=IKEv2 VPN', lease=192.168.43.11/32
+#332: "l2tp-psk"[49] 5.77.192.216, type=ESP, add_time=1755583439, inBytes=614752, outBytes=9272312, maxBytes=2^63B, id='192.168.10.162')";
+
+
+    auto r = parser::parse_lines(bbb);
+    for (auto && e: r)
+    {
+        std::cout << e.asLineLocate().toStdString() << std::endl;
+    }
+    return 0;
+
+
     auto ip1 = "178.67.193.41";
     auto ip2 = "178.71.108.49";
 
@@ -52,7 +65,7 @@ int gen_func(int argc, char *argv[])
         auto list = reader::read();
         for (auto && e: list)
         {
-            std::cout << e.asLineLocate().toStdString() << std::endl;
+            std::cout << e.asLine().toStdString() << std::endl;
         }
     }  catch (int i) {
         qDebug() << i;

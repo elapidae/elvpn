@@ -43,7 +43,8 @@ static void trim(QByteArray *s)
 //=======================================================================================
 static void take( QByteArray *a, char ch )
 {
-    if (a->isEmpty()) err("exp nonempty");
+    if (a->isEmpty())
+        err("exp nonempty");
     if (a->at(0) != ch) err(QString("exp ") + ch);
     a->remove(0, 1);
     trim(a);
@@ -128,7 +129,10 @@ static QByteArray parse_id( QByteArray *s )
     if ( !s->startsWith("id=") ) err("not id=");
     s->remove(0, 3);
     auto res = parse_quotes( s, '\'' );
-    take(s, ',');
+
+    if (!s->isEmpty() && s->at(0) == ',')
+        take(s, ',');
+
     return res;
 }
 //=======================================================================================
