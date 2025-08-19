@@ -3,6 +3,8 @@
 #include <QRegExp>
 #include <QDebug>
 
+#include <locator.h>
+
 /*
 ipsec whack --trafficstatus
 #154: "ikev2-cp"[27] 5.149.159.35, type=ESP, add_time=1755279621, inBytes=90686439, outBytes=2012385143, maxBytes=2^63B, id='CN=vpnclient, O=IKEv2 VPN', lease=192.168.43.13/32
@@ -11,42 +13,15 @@ ipsec whack --trafficstatus
 #154: "ikev2-cp"[27] 5.149.159.35, type=ESP, add_time=1755279621, inBytes=92941552, outBytes=2098679266, maxBytes=2^63B, id='CN=vpnclient, O=IKEv2 VPN', lease=192.168.43.13/32
 #161: "ikev2-cp"[29] 31.173.82.50, type=ESP, add_time=1755287453, inBytes=22054033, outBytes=680672599, maxBytes=2^63B, id='CN=vpnclient, O=IKEv2 VPN', lease=192.168.43.10/32
 #165: "l2tp-psk"[19] 5.77.192.216, type=ESP, add_time=1755292966, inBytes=292564, outBytes=1707394, maxBytes=2^63B, id='192.168.10.162', lease=192.168.43.10/32
-
-
-struct LineData
-{
-    int num = 0;
-    QByteArray conn_name;
-    int session_id = 0;
-    QByteArray ip;
-    QByteArray type;
-    QDateTime add_time;
-    size_t in_bytes = 0;
-    size_t out_bytes = 0;
-    QByteArray id;
-    QByteArray lease;
-};
 */
 
+//=======================================================================================
 static void err(QString s)
 {
     qDebug() << s;
     exit(1);
 }
-
-static void rm_empty(QByteArrayList *list)
-{
-    int idx = 0;
-    while (list->size() > idx)
-    {
-        if (!list->at(idx).isEmpty()) {
-            idx++;
-            continue;
-        }
-        list->removeAt(idx);
-    }
-}
-
+//=======================================================================================
 static long long parse_num(QByteArray *s)
 {
     QByteArray n;
@@ -60,12 +35,12 @@ static long long parse_num(QByteArray *s)
     }
     return n.toLongLong();
 }
-
+//=======================================================================================
 static void trim(QByteArray *s)
 {
     *s = s->trimmed();
 }
-
+//=======================================================================================
 static void take( QByteArray *a, char ch )
 {
     if (a->isEmpty()) err("exp nonempty");
@@ -73,7 +48,7 @@ static void take( QByteArray *a, char ch )
     a->remove(0, 1);
     trim(a);
 }
-
+//=======================================================================================
 static QByteArray parse_quotes(QByteArray *s, char quote)
 {
     QByteArray res;
@@ -86,6 +61,7 @@ static QByteArray parse_quotes(QByteArray *s, char quote)
     take(s, quote);
     return res;
 }
+//=======================================================================================
 static QByteArray take_until(QByteArray *s, char until)
 {
     QByteArray res;
@@ -100,7 +76,7 @@ static QByteArray take_until(QByteArray *s, char until)
     trim(s);
     return res;
 }
-
+//=======================================================================================
 static int parse_conn_id(QByteArray *s)
 {
     take(s, '#');
@@ -109,7 +85,7 @@ static int parse_conn_id(QByteArray *s)
     trim(s);
     return res;
 }
-
+//=======================================================================================
 static void parse_name_and_id(QByteArray *s, LineData *ld)
 {
     ld->name = parse_quotes(s, '"');
@@ -118,26 +94,26 @@ static void parse_name_and_id(QByteArray *s, LineData *ld)
     take(s, ']');
     trim(s);
 }
-
+//=======================================================================================
 static QByteArray ip(QByteArray *s)
 {
     return take_until(s, ',');
 }
-
+//=======================================================================================
 static QByteArray parse_type(QByteArray *s)
 {
     auto res = take_until(s, ',');
     trim(s);
     return res;
 }
-
+//=======================================================================================
 static QDateTime parse_add_time(QByteArray *s)
 {
     auto f = take_until(s, ',');
     auto lv = f.split('=');
     return QDateTime::fromSecsSinceEpoch(lv.at(1).toULongLong(), Qt::UTC);
 }
-
+//=======================================================================================
 static size_t parse_inOutBytes(QByteArray *s, QByteArray inout)
 {
     auto f = take_until(s, ',');
@@ -146,7 +122,7 @@ static size_t parse_inOutBytes(QByteArray *s, QByteArray inout)
     if (lv.at(0) != inout + "Bytes") err("not some bytes");
     return lv.at(1).toULongLong();
 }
-
+//=======================================================================================
 static QByteArray parse_id( QByteArray *s )
 {
     if ( !s->startsWith("id=") ) err("not id=");
@@ -155,7 +131,7 @@ static QByteArray parse_id( QByteArray *s )
     take(s, ',');
     return res;
 }
-
+//=======================================================================================
 static QByteArray parse_lease(QByteArray *s)
 {
     if (s->isEmpty()) return {};
@@ -167,6 +143,7 @@ static QByteArray parse_lease(QByteArray *s)
     s->clear();
     return res;
 }
+//=======================================================================================
 
 
 //=======================================================================================
@@ -191,7 +168,6 @@ LineData parser::parse(QByteArray line)
     return res;
 }
 //=======================================================================================
-
 LineData::vector parser::parse_lines(const QByteArray& lines)
 {
     LineData::vector res;
@@ -205,21 +181,40 @@ LineData::vector parser::parse_lines(const QByteArray& lines)
     return res;
 }
 //=======================================================================================
-
+static QString to_str(QDateTime dt)
+{
+    return dt.toString("yy-MM-dd_hh:mm:ss");
+}
+//=======================================================================================
 QString LineData::asLine() const
 {
-    auto now_ = QDateTime::currentDateTimeUtc();
-    auto now = now_.toString("yyyy-MM-dd hh:mm:ss");
+    auto now = QDateTime::currentDateTimeUtc();
 
-    return QString("%1 -> %2%3%4%5%6 | id=%7")
-            .arg(now)
+    return QString("%1 | %2 | %3 | %4 | %5 | %6 | id=%7")
+            .arg(to_str(now))
             .arg(cnn())
             .arg(ip())
             .arg(time())
             .arg(inCount())
             .arg(outCount())
             .arg(id.data())
-    ;
+            ;
+}
+//=======================================================================================
+QString LineData::asLineLocate() const
+{
+    auto now = QDateTime::currentDateTimeUtc();
+
+    auto lip = locator::ipinfo_io(ip_).str();
+    return QString("%1 | %2 | %3 | %4 | %5 | %6 | id=%7")
+            .arg(to_str(now))
+            .arg(cnn())
+            .arg(lip)
+            .arg(time())
+            .arg(inCount())
+            .arg(outCount())
+            .arg(id.data())
+            ;
 }
 //=======================================================================================
 QString LineData::cnn(int len) const
@@ -235,7 +230,7 @@ QString LineData::ip(int len) const
 //=======================================================================================
 QString LineData::time(int len) const
 {
-    auto dt = add_time.toString("yyyy-MM-dd hh:mm:ss");
+    auto dt = to_str(add_time);
     return QString("%1").arg(dt, len);
 }
 //=======================================================================================
@@ -281,11 +276,11 @@ static QString as_sample(long long val, int len = 15)
 //=======================================================================================
 QString LineData::inCount(int len) const
 {
-    return " | " + QString("in:%1").arg(as_sample(in_bytes, len-3), len);
+    return QString("in:%1").arg(as_sample(in_bytes, len-3), len);
 }
 //=======================================================================================
 QString LineData::outCount(int len) const
 {
-    return " | " + QString("out:%1").arg(as_sample(out_bytes, len-4), len);
+    return QString("out:%1").arg(as_sample(out_bytes, len-4), len);
 }
 //=======================================================================================

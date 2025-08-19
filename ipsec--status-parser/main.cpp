@@ -3,25 +3,25 @@
 #include <QRegExp>
 #include <QDebug>
 #include "reader.h"
+#include "locator.h"
 
 #include <iostream>
 
 
-
+int gen_func(int argc, char *argv[]);
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
+    return gen_func(argc, argv);
 
-    try {
-        auto list = reader::read();
-        for (auto && e: list)
-        {
-            std::cout << e.asLine().toStdString() << std::endl;
-        }
-    }  catch (int i) {
-        qDebug() << i;
-    }
+    auto ip1 = "178.67.193.41";
+    auto ip2 = "178.71.108.49";
+
+    qDebug() << locator::ipinfo_io(ip1).str();
+    qDebug() << locator::ipinfo_io(ip2).str();
+
     return 0;
+
+
 
     QString line = "#165: \"l2tp-psk\"[19] 5.77.192.216, type=ESP, add_time=1755292966, inBytes=292564, outBytes=1707394, maxBytes=2^63B, id='192.168.10.162'";
 
@@ -42,5 +42,20 @@ int main(int argc, char *argv[])
     qDebug() << l.lease;
 
     return 0;
-    return a.exec();
+}
+
+int gen_func(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    try {
+        auto list = reader::read();
+        for (auto && e: list)
+        {
+            std::cout << e.asLineLocate().toStdString() << std::endl;
+        }
+    }  catch (int i) {
+        qDebug() << i;
+    }
+    return 0;
 }

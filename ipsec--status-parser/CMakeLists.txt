@@ -19,6 +19,8 @@ add_executable(ipsec--status-parser
     parser.h
     reader.cpp
     reader.h
+    locator.h
+    locator.cpp
   main.cpp
 )
 

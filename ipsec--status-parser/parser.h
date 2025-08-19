@@ -15,11 +15,12 @@ ipsec whack --trafficstatus
 struct LineData
 {
     QString asLine() const;
+    QString asLineLocate() const;
 
     // conn / name /name_id
-    QString cnn(int len = 20) const;
+    QString cnn(int len = 16) const;
     QString ip(int len = 16) const;
-    QString time(int len = 22) const;
+    QString time(int len = 17) const;
     QString inCount(int len = 14) const;
     QString outCount(int len = 15) const;
 
