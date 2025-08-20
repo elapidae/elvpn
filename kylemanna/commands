@@ -1,0 +1,64 @@
+
+
+docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u tcp://$(hostname -f):443
+
+docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki
+
+
+###  --device /dev/net/tun \
+##  
+#  
+
+docker run \
+--name openvpn \
+-v $(pwd)/openvpn-data:/etc/openvpn \
+-p 443:1194/tcp \
+--cap-add=NET_ADMIN \
+--sysctl net.ipv6.conf.all.forwarding=1 \
+--sysctl net.ipv6.conf.default.forwarding=1 \
+-it --rm \
+kylemanna/openvpn
+===============================================
+docker run \
+--name openvpn \
+-v $(pwd)/openvpn-data:/etc/openvpn \
+-p 443:1194/tcp \
+--cap-add=NET_ADMIN \
+--sysctl net.ipv6.conf.all.forwarding=1 \
+--sysctl net.ipv6.conf.default.forwarding=1 \
+-d --restart unless-stopped \
+kylemanna/openvpn
+
+
+
+
+Generate a client certificate without a passphrase
+  docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full CLIENTNAME nopass
+
+$ docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full elap-ovpn nopass
+
+
+
+
+Retrieve the client configuration with embedded certificates
+ docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient CLIENTNAME > CLIENTNAME.ovpn
+
+$ docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient elap-ovpn >elap-ovpn.ovpn
+
+
+# elap-ovpn =========
+docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient elap-ovpn >elap-ovpn.ovpn
+
+
+docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full lkate-mdie nopass && \
+docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient lkate-mdie >lkate-mdie.ovpn
+
+docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full lkate-iphone nopass && \
+docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient lkate-iphone >lkate-iphone.ovpn
+
+docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full ara1 nopass && \
+docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient ara1 >ara1.ovpn
+
+
+
+

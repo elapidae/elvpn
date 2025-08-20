@@ -1,4 +1,4 @@
 #!/bin/bash -e
 
-ssh root@v37503.hosted-by-vdsina.com -p28078
+ssh -X root@v37503.hosted-by-vdsina.com -p28078
 

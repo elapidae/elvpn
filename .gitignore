@@ -1,3 +1,6 @@
 vpn-env.txt
 **/CMakeLists.txt.*
 **/build-*
+vdsina-root/*
+
+**/*.ovpn

@@ -1,0 +1,15 @@
+docker run \
+-it --rm \
+--name windows \
+-p 8006:8006 \
+-p 3389:3389 \
+--device=/dev/kvm \
+--device=/dev/net/tun \
+--cap-add NET_ADMIN \
+-v $(pwd)/win11:/storage \
+-v $(pwd)/xchg:/data \
+-v $(pwd)/en-us_windows_11_24h2_x64.iso:/boot.iso \
+--stop-timeout 120 \
+dockurr/windows
+
+
