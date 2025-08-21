@@ -22,13 +22,14 @@ kylemanna/openvpn
 docker run \
 --name openvpn \
 -v $(pwd)/openvpn-data:/etc/openvpn \
--p 443:1194/tcp \
 --cap-add=NET_ADMIN \
 --sysctl net.ipv6.conf.all.forwarding=1 \
 --sysctl net.ipv6.conf.default.forwarding=1 \
+--network stunnel-net \
 -d --restart unless-stopped \
 kylemanna/openvpn
 
+-p 443:1194/tcp \
 
 
 
@@ -48,17 +49,5 @@ $ docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_get
 
 # elap-ovpn =========
 docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient elap-ovpn >elap-ovpn.ovpn
-
-
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full lkate-mdie nopass && \
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient lkate-mdie >lkate-mdie.ovpn
-
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full lkate-iphone nopass && \
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient lkate-iphone >lkate-iphone.ovpn
-
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full ara1 nopass && \
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient ara1 >ara1.ovpn
-
-
 
 
