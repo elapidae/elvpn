@@ -5,6 +5,7 @@ import os
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import unquote
 from pathlib import Path
+import ssl
 
 BASE_DIR = Path(os.getenv("BASE_DIR", "./shared")).resolve()
 BASE_DIR.mkdir(parents=True, exist_ok=True)
@@ -26,14 +27,22 @@ class NoListingHandler(SimpleHTTPRequestHandler):
 
     def list_directory(self, path):
         # отключаем листинг каталогов
-        self.send_error(404, "Directory listing is disabled")
+        self.send_error(404, "http://natribu.org/")
         return None
 
 
 if __name__ == "__main__":
-    host = os.getenv("HOST", "127.0.0.1")
+    host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "8000"))
     httpd = HTTPServer((host, port), NoListingHandler)
-    print(f"Serving files from {BASE_DIR} on http://{host}:{port}")
+
+    # SSL контекст
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(certfile="cert.pem", keyfile="key.pem")  # свои сертификаты
+
+    # Оборачиваем HTTP-сервер в SSL
+    #httpd.socket = ssl_context.wrap_socket(httpd.socket, server_side=True)
+
+    print(f"Serving HTTPS files from {BASE_DIR} on {host}:{port}")
     httpd.serve_forever()
 
