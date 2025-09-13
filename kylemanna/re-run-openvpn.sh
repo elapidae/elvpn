@@ -9,7 +9,9 @@ docker run \
 --cap-add=NET_ADMIN \
 --sysctl net.ipv6.conf.all.forwarding=1 \
 --sysctl net.ipv6.conf.default.forwarding=1 \
---network stunnel-net \
+-p 443:1194/tcp \
 -d --restart unless-stopped \
 kylemanna/openvpn
+
+#--network stunnel-net \
 

@@ -30,8 +30,20 @@ docker run \
 kylemanna/openvpn
 
 -p 443:1194/tcp \
-
-
+===============================================
+2025-09-13
+To know starting command
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock assaflavie/runlike 
+===
+docker run\
+ --name=openvpn\
+ --volume $(pwd)/openvpn-data:/etc/openvpn\
+ --cap-add=NET_ADMIN\
+ -p 443:1194\
+ --restart=unless-stopped\
+ -d\
+ kylemanna/openvpn
+===============================================
 
 Generate a client certificate without a passphrase
   docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full CLIENTNAME nopass

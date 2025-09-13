@@ -1,0 +1,4 @@
+delme-ipsec
+
+openvpn-data/*
+!openvpn-data/openvpn.conf
