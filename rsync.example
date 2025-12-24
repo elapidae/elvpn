@@ -1,0 +1,4 @@
+rsync -avz --delete -e "ssh -p28078" root@elapidae.org:/root/ ./elapidae.org-cache/root/
+
+rsync -avz --delete -e "ssh -p28078" root@$vdsina:/root/ ./v37503/root/
+

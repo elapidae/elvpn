@@ -17,9 +17,9 @@ static Ip_Locator& singleton()
 }
 
 //=======================================================================================
-QByteArray Ip_Locator::info(QByteArray ip)
+QByteArray Ip_Locator::info(QByteArray ip, const QByteArray& key)
 {
-    return singleton().locate(ip);
+    return singleton().locate(ip, key);
 }
 //=======================================================================================
 
@@ -36,7 +36,8 @@ Ip_Locator::Ip_Locator( QString path )
         throw 42;
     }
 
-    auto q = db.exec("CREATE TABLE IF NOT EXISTS ipinfo (ip,city,region,org,postal)");
+    auto q = db.exec("CREATE TABLE IF NOT EXISTS ipinfo "
+                     "(key,stamp,ip,city,region,org,postal)");
 }
 //=======================================================================================
 Ip_Locator::~Ip_Locator()
@@ -47,12 +48,12 @@ Ip_Locator::~Ip_Locator()
 //=======================================================================================
 static QByteArray curl(QByteArray addr, QByteArray ip);
 static void err(QString s);
-//-----------------------------------------------------
-QByteArray Ip_Locator::locate( const QByteArray &ip )
+//------------------------------------------------------------------------
+QByteArray Ip_Locator::locate(const QByteArray &ip, const QByteArray &key)
 {
     if ( !has(ip) )
     {
-        add_to_base( ip );
+        add_to_base( ip, key );
     }
 
     return from_base( ip );
@@ -116,7 +117,7 @@ static QString clear_org(QString _org)
 QByteArray Ip_Locator::from_base( const QByteArray &ip )
 {
     QSqlQuery q(db);
-    q.prepare("SELECT ip,city,region,org,postal FROM ipinfo WHERE ip=:ip");
+    q.prepare("SELECT ip,city,region,org,postal,key,stamp FROM ipinfo WHERE ip=:ip");
     q.bindValue( ":ip", QString(ip) );
     q.exec();
     q.next();
@@ -133,7 +134,7 @@ QByteArray Ip_Locator::from_base( const QByteArray &ip )
             .arg(clear_org(org)).toLatin1();
 }
 //=======================================================================================
-void Ip_Locator::add_to_base( const QByteArray &ip_ )
+void Ip_Locator::add_to_base( const QByteArray &ip_ , const QByteArray& key )
 {
     auto received = curl( "ipinfo.io", ip_ );
 
@@ -149,12 +150,16 @@ void Ip_Locator::add_to_base( const QByteArray &ip_ )
     auto org    = obj["org"].toString();
     auto postal = obj["postal"].toString();
 
+    auto stamp = QDateTime::currentDateTimeUtc();
+
     db.transaction();
 
     QSqlQuery q(db);
-    q.prepare("INSERT INTO ipinfo (ip, city, region, org, postal) VALUES "
-              "(:ip, :city, :region, :org, :postal)");
+    q.prepare("INSERT INTO ipinfo ( key, stamp, ip, city, region, org, postal) VALUES "
+                                 "(:key,:stamp,:ip,:city,:region,:org,:postal)");
 
+    q.bindValue(":key",    QString(key));
+    q.bindValue(":stamp",  stamp.toString("yyyy-MM-dd hh:mm:ss"));
     q.bindValue(":ip",     ip);
     q.bindValue(":city",   city);
     q.bindValue(":region", region);

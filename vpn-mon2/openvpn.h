@@ -2,7 +2,7 @@
 #define OPENVPN_H
 
 #include <QObject>
-#include <QMap>
+
 
 #include "userlog.h"
 
@@ -15,8 +15,9 @@ public:
 
     void process(QList<QByteArray> lines);
 
-    QMap<QByteArray, UserLog> users;
+    std::map<QByteArray, UserLog> users;
 
+    void shift( const QDateTime& ts );
 
 signals:
     //void upd_user(QByteArray id, UserLog user);

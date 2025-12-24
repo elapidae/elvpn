@@ -14,9 +14,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Sql REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Sql REQUIRED)
 
-add_definitions("-DV_HAS_QT=1")
-set(VLIBS_DIR "../../SOURCES/vlibs2")
-include(${VLIBS_DIR}/cmake/vlog.cmake)
+#add_definitions("-DV_HAS_QT=1")
+#set(VLIBS_DIR "../../SOURCES/vlibs2")
+#include(${VLIBS_DIR}/cmake/vlog.cmake)
 
 set(PROJECT_SOURCES
         ${V_SOURCES} ${V_HEADERS}
@@ -35,6 +35,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(vpn-mon2
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        mon2.qml
+        model.h model.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET vpn-mon2 APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

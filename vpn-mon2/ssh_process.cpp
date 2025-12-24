@@ -1,6 +1,8 @@
 #include "ssh_process.h"
 
-#include "vlog.h"
+//#include "vlog.h"
+#include <QDebug>
+#define vdeb qDebug() << __LINE__
 
 
 static auto started_label = "=== Started ===";
@@ -46,6 +48,12 @@ void Ssh_Process::stop()
     state = State::starting_ssh;
     cout_lines.clear();
     cout_buffer.clear();
+}
+//=======================================================================================
+void Ssh_Process::shift( QDateTime ts )
+{
+    ovpn.shift( ts );
+    ipsec.shift( ts );
 }
 //=======================================================================================
 void Ssh_Process::grab_server()

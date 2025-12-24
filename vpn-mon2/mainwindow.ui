@@ -6,107 +6,93 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1871</width>
-    <height>997</height>
+    <width>462</width>
+    <height>643</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPlainTextEdit" name="out">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>1091</width>
-      <height>761</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_start">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>790</y>
-      <width>100</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Start</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_stop">
-    <property name="geometry">
-     <rect>
-      <x>150</x>
-      <y>790</y>
-      <width>100</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Stop</string>
-    </property>
-   </widget>
-   <widget class="QTextBrowser" name="browser">
-    <property name="geometry">
-     <rect>
-      <x>1170</x>
-      <y>60</y>
-      <width>571</width>
-      <height>791</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_connect">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>790</y>
-      <width>100</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Connect</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_disconnect">
-    <property name="geometry">
-     <rect>
-      <x>400</x>
-      <y>790</y>
-      <width>100</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Disconnect</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_unlog">
-    <property name="geometry">
-     <rect>
-      <x>520</x>
-      <y>790</y>
-      <width>100</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>log/unlog</string>
-    </property>
-   </widget>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Tab 1</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QPlainTextEdit" name="out"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="le_cmd"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Tab 2</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QTextBrowser" name="browser"/>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="btn_start">
+        <property name="text">
+         <string>Start</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_stop">
+        <property name="text">
+         <string>Stop</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_connect">
+        <property name="text">
+         <string>Connect</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_disconnect">
+        <property name="text">
+         <string>Disconnect</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_unlog">
+        <property name="text">
+         <string>log/unlog</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1871</width>
-     <height>24</height>
+     <width>462</width>
+     <height>20</height>
     </rect>
    </property>
   </widget>

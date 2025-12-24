@@ -26,10 +26,21 @@ void UserLog::update(QDateTime ts, qulonglong sent, qulonglong received)
     }
 }
 //=======================================================================================
+void UserLog::shift( QDateTime ts )
+{
+    if (stamps.isEmpty())
+    {
+        update(ts, 0, 0);
+        return;
+    }
+    auto last = stamps.last();
+    update( ts, last.sent, last.received );
+}
+//=======================================================================================
 static QString key_id( UserLog::Style style, QByteArray key, QByteArray id )
 {
     auto color = style == UserLog::Style::OpenVPN ? "#003399" : "#005522";
-    return QString(R"(<div style="font-weight:bold; font-size:14px;"> %1[%2] </div>)")
+    return QString(R"(<div style="font-weight:bold; font-size:14px;"> %1 [%2] </div>)")
             .arg(key.data()).arg(id.data());
 }
 //---------------------------------------------------------------------------------------
@@ -42,16 +53,30 @@ static QString key( UserLog::Style style, QByteArray id )
                     .arg(id.data());
 }
 //---------------------------------------------------------------------------------------
-static QString locate( UserLog::Style style, QByteArray id )
+static QString locate( UserLog::Style style, QByteArray id, QByteArray key )
 {
     auto ip = id.split(':').at(0);
-    auto loc = Ip_Locator::info(ip);
+    auto loc = Ip_Locator::info( ip, key );
 
     auto color = style == UserLog::Style::OpenVPN ? "#003399" : "#005522";
     return QString(R"(<div style="font-weight:bold; font-size:13px;
                            color:%1">loc: %2</div>)")
-                    .arg(color)
-                    .arg(loc.data());
+        .arg(color)
+        .arg(loc.data());
+}
+//---------------------------------------------------------------------------------------
+static QString locate_from( QByteArray id, QByteArray key, QDateTime from )
+{
+    auto ip = id.split(':').at(0);
+    auto loc = Ip_Locator::info( ip, key );
+
+    auto color = "#003399";
+    auto from_text = from.toString(Qt::ISODate).replace('T', ' ');
+    return QString(R"(<div style="font-weight:bold; font-size:13px;
+                           color:%1">loc: %2 from %3</div>)")
+        .arg(color)
+        .arg(loc.data())
+        .arg(from_text);
 }
 //---------------------------------------------------------------------------------------
 static QString speed(double spd)
@@ -108,16 +133,9 @@ static QString from( UserLog::Style style, QDateTime from )
 }
 //---------------------------------------------------------------------------------------
 static auto constexpr tmpl2_openvpn =
-R"(<div style="border:2px solid #ccc; margin:0px; padding:0px; font-family:monospace;
-        font-size:12px; color:#003399;">
-  %1  %2  %3  %4  %5
-</div>
-)";
-//---------------------------------------------------------------------------------------
-static auto constexpr tmpl2_ipsec =
-R"(<div style="border:1px solid #ccc; margin:4px; padding:4px; font-family:monospace;
-        font-size:14px; color:#006600;">
-  %1  %2  %3  %4  %5  %6
+R"(<div style="border:0px solid #ccc; margin:0px; padding:0px; font-family:monospace;
+        font-size:12px; color:#003399; background-color:#eaffea;">
+  %1  %2  %3  %4
 </div>
 )";
 //---------------------------------------------------------------------------------------
@@ -136,13 +154,12 @@ QString UserLog::text() const
     auto spd_sent = d_sent / d_sec;
     auto spd_recv = d_recv / d_sec;
 
-    auto tmpl = style == Style::OpenVPN ? tmpl2_openvpn : tmpl2_ipsec;
+    auto ip = id.split(':').first();
+    auto tmpl = tmpl2_openvpn;
     return QString(tmpl)
-            .arg( ::key_id(style,key,id)                    )
-            //.arg( ::key(style,key)                          )
-            .arg( ::locate(style,id)                        )
+            .arg( ::key_id(style,key,ip)                    )
+            .arg( ::locate_from(id, key, from)              )
             .arg( ::sent(style, spd_sent, last.sent)        )
-            .arg( ::recv(style, spd_recv, last.received)    )
-            .arg( ::from(style,from)                        );
+            .arg( ::recv(style, spd_recv, last.received)    );
 }
 //=======================================================================================

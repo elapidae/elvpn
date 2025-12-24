@@ -23,8 +23,27 @@ public:
     void start();
     void stop();
 
+    void shift( QDateTime ts );
+
     OpenVPN  ovpn;
     IPSec    ipsec;
+
+public:
+    void send_cmd( const QByteArray& cmd );
+
+    template<typename T>
+    void send_cmd(QByteArray first, T second)
+    {
+        first = first + ' ' + second;
+        send_cmd(first);
+    }
+
+    template<typename T, typename ... Args>
+    void send_cmd(QByteArray first, T second, Args ... args)
+    {
+        first = first + ' ' + second;
+        send_cmd(first, args...);
+    }
 
 signals:
     void server_log( const QByteArray& );
@@ -54,24 +73,6 @@ private:
     void process_one_line(QByteArray line);
     void process_ipsec();
     void process_ovpn();
-
-
-    void send_cmd( const QByteArray& cmd );
-
-    template<typename T>
-    void send_cmd(QByteArray first, T second)
-    {
-        first = first + ' ' + second;
-        send_cmd(first);
-    }
-
-    template<typename T, typename ... Args>
-    void send_cmd(QByteArray first, T second, Args ... args)
-    {
-        first = first + ' ' + second;
-        send_cmd(first, args...);
-    }
-
 };
 
 #endif // SSH_PROCESS_H

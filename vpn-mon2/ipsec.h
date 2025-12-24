@@ -2,7 +2,6 @@
 #define IPSEC
 
 #include <QObject>
-#include <QMap>
 
 #include "userlog.h"
 
@@ -13,13 +12,18 @@ class IPSec : public QObject
 public:
     explicit IPSec(QObject *parent = nullptr);
 
-    void process(QList<QByteArray> lines);
+    void process( QList<QByteArray> lines);
 
-    QMap<QByteArray, UserLog> users;
+    void shift( const QDateTime& ts );
+
+    std::map<QByteArray, UserLog> users;
+
 signals:
+    void update(const UserLog&);
+    void remove(const QByteArray& key);
 
 private:
-    QByteArray parse_line(QByteArray *line);
+    //QByteArray parse_line(QByteArray *line);
 };
 
 #endif // IPSEC

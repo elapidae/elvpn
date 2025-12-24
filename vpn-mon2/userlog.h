@@ -12,12 +12,14 @@ class UserLog
 public:
     enum class Style { OpenVPN, IPSec };
 
+    UserLog() {}
     UserLog( Style s, const QByteArray& id, const QByteArray& key, const QDateTime& from );
 
 //    void set( const QByteArray& id, const QByteArray& key, const QDateTime& from,
 //              QColor bg_color, QColor fg_color );
 
     void update( QDateTime ts, qulonglong sent, qulonglong received );
+    void shift( QDateTime ts );
 
     QString text() const;
 

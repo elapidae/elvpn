@@ -7,26 +7,54 @@ IPSec::IPSec(QObject *parent)
     : QObject{parent}
 {}
 //=======================================================================================
+static int parse_conn_id(QByteArray *s);
+static std::tuple<QByteArray,int> parse_name_and_id(QByteArray *s);
+static QByteArray parse_ip(QByteArray *s);
+static QByteArray parse_type(QByteArray *s);
+static QDateTime parse_add_time(QByteArray *s);
+static size_t parse_inOutBytes( QByteArray *s, const char *io_label );
+static QByteArray take_until(QByteArray *s, char until);
+static QByteArray parse_id( QByteArray *s );
+static QByteArray parse_lease( QByteArray *s );
+static QByteArray parse_conn_name_id( QByteArray *line );
+
+
 void IPSec::process(QList<QByteArray> lines)
 {
-    QSet<QByteArray> cur_users;
+    decltype(users) new_users;
     for ( auto &&ll: lines )
     {
-        ll = ll.trimmed();
-        if (ll.isEmpty()) continue;
-        auto ip = parse_line( &ll );
-        cur_users.insert( ip );
+        auto line = ll.trimmed();
+        if (line.isEmpty()) continue;
+        auto key = parse_conn_name_id( &line );
+
+        auto ip = parse_ip( &line );
+        auto type = parse_type( &line );
+        auto atime = parse_add_time( &line );
+        auto received = parse_inOutBytes( &line, "inBytes" );
+        auto sent = parse_inOutBytes( &line, "outBytes" );
+        //auto maxBytes = take_until( line, ',' );
+        //auto id = parse_id( line );
+        //auto lease = parse_lease( line );
+        //---------------------------------------------------
+        auto user_it = users.find(ip);
+        if ( user_it == users.end() ) {
+            new_users.emplace(ip, UserLog( UserLog::Style::IPSec, ip, key, atime) );
+        } else {
+            new_users[ip] = users[ip];
+        }
+        auto now = QDateTime::currentDateTimeUtc();
+        new_users[ip].update(now, sent, received);
     }
 
-    auto last_keys = users.keys();
-    for ( auto && used: cur_users )
+    users = new_users;
+}
+//=======================================================================================
+void IPSec::shift( const QDateTime& ts )
+{
+    for ( auto & u: users )
     {
-        last_keys.removeOne(used);
-    }
-
-    for ( auto && hidden: last_keys )
-    {
-        users.remove( hidden );
+        u.second.shift( ts );
     }
 }
 //=======================================================================================
@@ -47,29 +75,6 @@ static QByteArray parse_conn_name_id( QByteArray *line )
     return QString("%1/%2/%3")
             .arg(conn_id).arg(name.data()).arg(name_id)
             .toLatin1();
-}
-//---
-QByteArray IPSec::parse_line( QByteArray *line )
-{
-    auto key = parse_conn_name_id( line );
-
-    auto ip = parse_ip( line );
-    auto type = parse_type( line );
-    auto atime = parse_add_time( line );
-    auto received = parse_inOutBytes( line, "inBytes" );
-    auto sent = parse_inOutBytes( line, "outBytes" );
-    //auto maxBytes = take_until( line, ',' );
-    //auto id = parse_id( line );
-    //auto lease = parse_lease( line );
-    //---------------------------------------------------
-    auto user_it = users.find(ip);
-    if ( user_it == users.end() ) {
-        users.insert(ip, UserLog( UserLog::Style::IPSec, ip, key, atime) );
-    }
-    auto now = QDateTime::currentDateTimeUtc();
-    users.find(ip).value().update(now, sent, received);
-
-    return ip;
 }
 //=======================================================================================
 
@@ -249,54 +254,6 @@ static QString to_str(QDateTime dt)
 {
     return dt.toString("yy-MM-dd_hh:mm:ss");
 }
-//=======================================================================================
-//QString LineData::asLine() const
-//{
-//    auto now = QDateTime::currentDateTimeUtc();
-
-//    return QString("%1 | %2 | %3 | %4 | %5 | %6 | id=%7")
-//            .arg(to_str(now))
-//            .arg(cnn())
-//            .arg(ip())
-//            .arg(time())
-//            .arg(inCount())
-//            .arg(outCount())
-//            .arg(id.data())
-//            ;
-//}
-//=======================================================================================
-//QString LineData::asLineLocate() const
-//{
-//    auto now = QDateTime::currentDateTimeUtc();
-
-//    auto lip = locator::ipinfo_io(ip_).str();
-//    return QString("%1 | %2 | %3 | %4 | %5 | %6 | id=%7")
-//            .arg(to_str(now))
-//            .arg(cnn())
-//            .arg(lip)
-//            .arg(time())
-//            .arg(inCount())
-//            .arg(outCount())
-//            .arg(id.data())
-//            ;
-//}
-//=======================================================================================
-//QString LineData::cnn(int len) const
-//{
-//    auto res = QString("%1/%2/%3").arg(conn_id).arg(name.data()).arg(name_id);
-//    return QString("%1").arg(res, len);
-//}
-//=======================================================================================
-//QString LineData::ip(int len) const
-//{
-//    return QString("%1").arg(ip_.data(), len);
-//}
-//=======================================================================================
-//QString LineData::time(int len) const
-//{
-//    auto dt = to_str(add_time);
-//    return QString("%1").arg(dt, len);
-//}
 //=======================================================================================
 static QString as_sample(long long val, int len = 15)
 {

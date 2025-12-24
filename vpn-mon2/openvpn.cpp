@@ -57,7 +57,7 @@ void OpenVPN::process(QList<QByteArray> lines)
     auto upd = lines.takeFirst().split(',');
     auto heap = lines.takeFirst().split(',');
 
-    QSet<QByteArray> cur_users;
+    decltype(users) new_users;
     while ( !lines.isEmpty() )
     {
         auto list = lines.takeFirst().split(',');
@@ -97,22 +97,26 @@ void OpenVPN::process(QList<QByteArray> lines)
         auto sent = Bytes_Sent.toULongLong();
         auto recv = Bytes_Received.toULongLong();
 
-        cur_users.insert(id);
-        if ( !users.contains(id) )
+
+        if ( users.count(id) )
+        {
+            new_users[id] = users[id];
+        } else
         {
             if (key == "UNDEF") continue;
-            users.insert( id, UserLog(UserLog::Style::OpenVPN, id, key, from) );
+            new_users.emplace( id, UserLog(UserLog::Style::OpenVPN, id, key, from) );
         }
-        users.find(id).value().update( now, sent, recv );
+        new_users.find(id)->second.update( now, sent, recv );
     } // while lines
 
-    auto last_keys = users.keys();
-    for ( auto && used: cur_users )
+    users = new_users;
+}
+//=======================================================================================
+void OpenVPN::shift( const QDateTime& ts )
+{
+    for ( auto & u: users )
     {
-        last_keys.removeOne(used);
-    }
-    for ( auto && hidden: last_keys )
-    {
-        users.remove( hidden );
+        u.second.shift( ts );
     }
 }
+//=======================================================================================

@@ -31,6 +31,8 @@ private slots:
     void on_btn_disconnect_clicked();
     void on_btn_unlog_clicked();
 
+    void on_le_cmd_textChanged(const QString &arg1);
+
 private:
     Ui::MainWindow *ui;
     QTimer grab_timer;
