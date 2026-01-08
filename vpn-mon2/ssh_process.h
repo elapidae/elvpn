@@ -26,7 +26,6 @@ public:
     void shift( QDateTime ts );
 
     OpenVPN  ovpn;
-    IPSec    ipsec;
 
 public:
     void send_cmd( const QByteArray& cmd );
@@ -67,11 +66,9 @@ private:
         starting_ssh,
         wait_start_label,
         in_openvpn,
-        in_ipsec,
     } state = State::starting_ssh;
     void process_buffer();
     void process_one_line(QByteArray line);
-    void process_ipsec();
     void process_ovpn();
 };
 

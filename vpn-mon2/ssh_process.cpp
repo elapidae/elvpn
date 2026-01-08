@@ -53,7 +53,6 @@ void Ssh_Process::stop()
 void Ssh_Process::shift( QDateTime ts )
 {
     ovpn.shift( ts );
-    ipsec.shift( ts );
 }
 //=======================================================================================
 void Ssh_Process::grab_server()
@@ -124,10 +123,6 @@ void Ssh_Process::process_one_line(QByteArray line)
     // ----------------------------------------------------------------------------------
     if ( state == State::wait_start_label )
     {
-        if (line == ipsec_start_label) {
-            state = State::in_ipsec;
-            return;
-        }
         if (line == ovpn_start_label) {
             state = State::in_openvpn;
             return;
@@ -147,14 +142,6 @@ void Ssh_Process::process_one_line(QByteArray line)
         return;
     }
     // ----------------------------------------------------------------------------------
-    if ( state == State::in_ipsec )
-    {
-        if (line == ipsec_end_label) {
-            process_ipsec();
-            state = State::wait_start_label;
-            return;
-        }
-    }
     if ( state == State::in_openvpn )
     {
         if (line == ovpn_end_label) {
@@ -163,22 +150,16 @@ void Ssh_Process::process_one_line(QByteArray line)
             return;
         }
     }
+    // ----------------------------------------------------------------------------------
     cout_lines << line;
     // ----------------------------------------------------------------------------------
-}
-//=======================================================================================
-void Ssh_Process::process_ipsec()
-{
-    ipsec.process( cout_lines );
-    cout_lines.clear();
-    signal_update();
 }
 //=======================================================================================
 void Ssh_Process::process_ovpn()
 {
     ovpn.process( cout_lines );
     cout_lines.clear();
-    signal_update();
+    emit signal_update();
 }
 //=======================================================================================
 //=======================================================================================

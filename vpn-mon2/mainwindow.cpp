@@ -1,29 +1,36 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
-//#include "vlog.h"
 #include <QDebug>
 #define vdeb qDebug() << __LINE__
 
-//#include "vcat.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
 
-static auto vdsina_url = "v37503.hosted-by-vdsina.com";
 static auto elapidae_url = "elapidae.org";
 
 static auto started_label = "=== Started ===";
 
 static auto ovpn_start_label = "=== OVPN START ===";
-//static auto openvpn_status_file = "/root/elvpn/kylemanna/openvpn-data/openvpn-status.log";
 static auto ovpn_end_label = "=== OVPN END ===";
 
-static auto ipsec_start_label = "=== IPSEC START ===";
-static auto ipsec_status_script = "/usr/local/sbin/sh-show-ipsec.sh";
-static auto ipsec_end_label = "=== IPSEC END ===";
 
+struct TCol
+{
+    enum {
+        from     = 0,
+        key      = 1,
+        ip       = 2,
+        loc      = 3,
+        recv     = 4,
+        recv_spd = 5,
+        sent     = 6,
+        sent_spd = 7,
+        count = 8
+    };
+};
 //=======================================================================================
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -31,39 +38,30 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->table->setColumnCount(TCol::count);
+    ui->table->setHorizontalHeaderItem(TCol::from, new QTableWidgetItem("From"));
+    ui->table->setHorizontalHeaderItem(TCol::key, new QTableWidgetItem("Key"));
+    ui->table->setHorizontalHeaderItem(TCol::ip, new QTableWidgetItem("IP"));
+    ui->table->setHorizontalHeaderItem(TCol::loc, new QTableWidgetItem("Location"));
+    ui->table->setHorizontalHeaderItem(TCol::recv, new QTableWidgetItem("Recv"));
+    ui->table->setHorizontalHeaderItem(TCol::recv_spd, new QTableWidgetItem("R-srd"));
+    ui->table->setHorizontalHeaderItem(TCol::sent, new QTableWidgetItem("Sent"));
+    ui->table->setHorizontalHeaderItem(TCol::sent_spd, new QTableWidgetItem("S-spd"));
+    ui->table->setSortingEnabled(true);
+    ui->table->sortItems(TCol::from, Qt::AscendingOrder);
+
     ui->out->setMaximumBlockCount(200);
 
     connect( &grab_timer, &QTimer::timeout, this, &MainWindow::slot_grab_timer );
 
-    connect( &vdsina, &Ssh_Process::server_log, [this](const QByteArray& arr) {
-        ui->out->appendPlainText( QString::fromLatin1(arr) );
-    });
     connect( &elapidae, &Ssh_Process::server_log, [this](const QByteArray& arr) {
         ui->out->appendPlainText( QString::fromLatin1(arr) );
     });
 
-    connect( &vdsina, &Ssh_Process::signal_update, [this]()
-    {
-        elapidae.shift(QDateTime::currentDateTimeUtc());
-        slot_update();
-    } );
     connect( &elapidae, &Ssh_Process::signal_update, [this]()
     {
-        vdsina.shift(QDateTime::currentDateTimeUtc());
         slot_update();
     });
-
-    vdsina.ssh_arguments = QStringList{
-        "-p", "28078", "-C",
-        QString("monitor2@") + vdsina_url,
-    };
-    auto vdcmd1 = QByteArray("echo ") + ovpn_start_label +
-                       " && show_openvpn && echo " + ovpn_end_label;
-    auto vdcmd2 = QByteArray("echo ") + ipsec_start_label + " && sudo " + ipsec_status_script +
-                       " && echo " + ipsec_end_label;
-
-    vdsina.grab_commands.append(vdcmd1);
-    vdsina.grab_commands.append(vdcmd2);
 
     elapidae.ssh_arguments = QStringList{
         "-p", "28078", "-C",
@@ -74,13 +72,6 @@ MainWindow::MainWindow(QWidget *parent)
                       " && cat el-ovpn/el-ovpn-data/status.log && echo " +
                       ovpn_end_label;
     elapidae.grab_commands.append( elcmd );
-
-    //vdsina.start();
-    //elapidae.start();
-
-    connect( &grab_timer, &QTimer::timeout, &vdsina, &Ssh_Process::grab_server );
-    connect( &grab_timer, &QTimer::timeout, &elapidae, &Ssh_Process::grab_server );
-    //grab_timer.start(1000);
 }
 //=======================================================================================
 MainWindow::~MainWindow()
@@ -92,7 +83,6 @@ MainWindow::~MainWindow()
 //=======================================================================================
 void MainWindow::slot_grab_timer()
 {
-    vdsina.grab_server();
     elapidae.grab_server();
 }
 //=======================================================================================
@@ -109,32 +99,52 @@ void MainWindow::on_btn_stop_clicked()
 auto constexpr hline = R"(<hr style="border: none; border-top: 0px solid #666; margin: 0px 0;">)";
 void MainWindow::slot_update()
 {
-    auto map = vdsina.ovpn.users;
-    map.insert(vdsina.ipsec.users.begin(), vdsina.ipsec.users.end());
-    map.insert(elapidae.ovpn.users.begin(), elapidae.ovpn.users.end());
-    map.insert(elapidae.ipsec.users.begin(), elapidae.ipsec.users.end());
+    auto &map = elapidae.ovpn.users;
 
+    auto * table = ui->table;
+    table->setRowCount( map.size() );
+    ui->table->setSortingEnabled(false);
+
+    auto set_item = [table](int row, int col, QString text) {
+        auto item = table->item( row, col );
+        if ( !item )
+        {
+            item = new QTableWidgetItem;
+            table->setItem(row, col, item);
+        }
+        item->setText(text);
+    };
+
+    int idx = 0;
     QString html;
-    for ( auto && user: map )
+    for ( auto && _user: map )
     {
-        html += user.second.text() + hline;
-        //vdeb << user.text();
-//        throw 42;
+        auto & user = _user.second;
+        html += user.text() + hline;
+        set_item(idx, TCol::from,     user.get_from());
+        set_item(idx, TCol::key,      user.get_key());
+        set_item(idx, TCol::ip,       user.get_ip());
+        set_item(idx, TCol::loc,      user.get_loc());
+        set_item(idx, TCol::recv,     user.get_recv());
+        set_item(idx, TCol::recv_spd, user.get_recv_spd());
+        set_item(idx, TCol::sent,     user.get_sent());
+        set_item(idx, TCol::sent_spd, user.get_sent_spd());
+        ++idx;
     }
 
+    table->resizeColumnsToContents();
+    ui->table->setSortingEnabled(true);
     ui->browser->setHtml( html );
 }
 //=======================================================================================
 void MainWindow::on_btn_connect_clicked()
 {
     on_btn_disconnect_clicked();
-    vdsina.start();
     elapidae.start();
 }
 //=======================================================================================
 void MainWindow::on_btn_disconnect_clicked()
 {
-    vdsina.stop();
     elapidae.stop();
 }
 //=======================================================================================

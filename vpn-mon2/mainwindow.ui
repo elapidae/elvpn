@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -40,6 +40,22 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QTextBrowser" name="browser"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_3">
+       <attribute name="title">
+        <string>Page</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QTableWidget" name="table">
+          <property name="font">
+           <font>
+            <family>Courier 10 Pitch</family>
+           </font>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>

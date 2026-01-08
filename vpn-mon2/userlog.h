@@ -23,6 +23,15 @@ public:
 
     QString text() const;
 
+    QString get_key() const;
+    QString get_ip() const;
+    QString get_loc() const;
+    QString get_from() const;
+    QString get_recv() const;
+    QString get_recv_spd() const;
+    QString get_sent() const;
+    QString get_sent_spd() const;
+
 private:
     Style style;
     QByteArray id, key;

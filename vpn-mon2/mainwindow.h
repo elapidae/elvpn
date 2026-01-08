@@ -37,7 +37,7 @@ private:
     Ui::MainWindow *ui;
     QTimer grab_timer;
 
-    Ssh_Process vdsina, elapidae;
+    Ssh_Process elapidae;
 
     void slot_update();
 };

@@ -108,6 +108,28 @@ static QString speed(double spd)
     return QString("%1 B/s").arg(spd);
 }
 //---------------------------------------------------------------------------------------
+static QString speed_as_text(double spd)
+{
+    if ( spd != spd ) return "------ B/s"; // nan
+
+    if ( spd < 1'000. ) {
+        return QString("[%1 B/s]").arg(spd, 6, 'f', 2);
+    }
+
+    if ( spd < 1'000'000. ) {
+        spd /= 1000;
+        return QString("[%1 K/s]").arg(spd, 6, 'f', 2);
+    }
+
+    if ( spd < 1'000'000'000. ) {
+        spd /= 1000'000;
+        return QString("[%1 M/s]").arg(spd, 6, 'f', 2);
+    }
+
+    qDebug() << "Speed: " << spd;
+    return QString("%1 B/s").arg(spd);
+}
+//---------------------------------------------------------------------------------------
 static QString sent( UserLog::Style style, double _spd, quint64 total )
 {
     static QLocale en(QLocale::English);
@@ -161,5 +183,80 @@ QString UserLog::text() const
             .arg( ::locate_from(id, key, from)              )
             .arg( ::sent(style, spd_sent, last.sent)        )
             .arg( ::recv(style, spd_recv, last.received)    );
+}
+//=======================================================================================
+QString UserLog::get_key() const
+{
+    return key.data();
+}
+//=======================================================================================
+QString UserLog::get_ip() const
+{
+    return id.data();
+}
+//=======================================================================================
+QString UserLog::get_loc() const
+{
+    auto ip = id.split(':').at(0);
+    return Ip_Locator::info( ip, key );
+}
+//=======================================================================================
+QString UserLog::get_from() const
+{
+    return from.toString(Qt::ISODate).replace('T', ' ');
+}
+//=======================================================================================
+QString UserLog::get_recv() const
+{
+    if ( stamps.isEmpty() ) return {"0"};
+    auto &last = stamps.last();
+
+    static QLocale en(QLocale::English);
+    auto tot = en.toString(last.received); // 123,456,789
+    return QString("%1").arg(tot);
+}
+//=======================================================================================
+QString UserLog::get_recv_spd() const
+{
+    if ( stamps.isEmpty() ) return {"0"};
+
+    auto &first = stamps.first();
+    auto &last = stamps.last();
+    double d_recv = last.received - first.received;
+
+    auto d_ms = last.stamp.toMSecsSinceEpoch() - first.stamp.toMSecsSinceEpoch();
+    auto d_sec = d_ms / 1000.;
+
+    auto spd_recv = d_recv / d_sec;
+
+    static QLocale en(QLocale::English);
+    return speed_as_text(spd_recv);
+}
+//=======================================================================================
+QString UserLog::get_sent() const
+{
+    if ( stamps.isEmpty() ) return {"0"};
+    auto &last = stamps.last();
+
+    static QLocale en(QLocale::English);
+    auto tot = en.toString(last.sent); // 123,456,789
+    return QString("%1").arg(tot);
+}
+//=======================================================================================
+QString UserLog::get_sent_spd() const
+{
+    if ( stamps.isEmpty() ) return {"0"};
+
+    auto &first = stamps.first();
+    auto &last = stamps.last();
+    double d_sent = last.sent - first.sent;
+
+    auto d_ms = last.stamp.toMSecsSinceEpoch() - first.stamp.toMSecsSinceEpoch();
+    auto d_sec = d_ms / 1000.;
+
+    auto spd_sent = d_sent / d_sec;
+
+    static QLocale en(QLocale::English);
+    return speed_as_text(spd_sent);
 }
 //=======================================================================================
