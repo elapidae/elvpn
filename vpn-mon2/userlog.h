@@ -7,7 +7,7 @@
 
 class UserLog
 {
-    static constexpr auto max_points = 60;
+    static constexpr auto max_points = 5;
 
 public:
     enum class Style { OpenVPN, IPSec };

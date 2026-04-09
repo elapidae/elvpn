@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <QSortFilterProxyModel>
 
 
 static auto elapidae_url = "elapidae.org";
@@ -31,6 +32,39 @@ struct TCol
         count = 8
     };
 };
+
+//=======================================================================================
+
+class CustomSortModel : public QSortFilterProxyModel {
+protected:
+    bool lessThan(const QModelIndex &left,
+                  const QModelIndex &right) const override
+    {
+        QVariant l = sourceModel()->data(left, Qt::EditRole);
+        QVariant r = sourceModel()->data(right, Qt::EditRole);
+
+        // пример: сначала пустые
+        if (l.isNull() && !r.isNull()) return true;
+        if (!l.isNull() && r.isNull()) return false;
+
+        // пример: по-разному сортируем разные колонки
+        auto in_recv = left.column() == TCol::recv;
+        auto in_sent = left.column() == TCol::sent;
+        in_recv = in_recv && right.column() == TCol::recv;
+        in_sent = in_sent && right.column() == TCol::sent;
+
+        if ( !in_recv && !in_sent )
+        {
+            return QSortFilterProxyModel::lessThan(left, right);
+        }
+
+        auto ileft  = l.toString().remove(",").toULongLong();
+        auto iright = r.toString().remove(",").toULongLong();
+
+        return ileft < iright;
+    }
+};
+
 //=======================================================================================
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -54,11 +88,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect( &grab_timer, &QTimer::timeout, this, &MainWindow::slot_grab_timer );
 
-    connect( &elapidae, &Ssh_Process::server_log, [this](const QByteArray& arr) {
+    connect( &elapidae, &Ssh_Process::server_log, this, [this](const QByteArray& arr) {
         ui->out->appendPlainText( QString::fromLatin1(arr) );
     });
 
-    connect( &elapidae, &Ssh_Process::signal_update, [this]()
+    connect( &elapidae, &Ssh_Process::signal_update, this, [this]()
     {
         slot_update();
     });
@@ -72,6 +106,10 @@ MainWindow::MainWindow(QWidget *parent)
                       " && cat el-ovpn/el-ovpn-data/status.log && echo " +
                       ovpn_end_label;
     elapidae.grab_commands.append( elcmd );
+
+    //====
+    grab_timer.start(1000);
+    elapidae.start();
 }
 //=======================================================================================
 MainWindow::~MainWindow()
@@ -101,7 +139,15 @@ void MainWindow::slot_update()
 {
     auto &map = elapidae.ovpn.users;
 
-    auto * table = ui->table;
+    auto *table = ui->table;
+    auto selected = table->selectedItems();
+    QString key;
+    for ( auto & s: selected )
+    {
+        if ( s->column() == TCol::key ) key = s->text();
+        s->setSelected( false );
+    }
+
     table->setRowCount( map.size() );
     ui->table->setSortingEnabled(false);
 
@@ -133,8 +179,20 @@ void MainWindow::slot_update()
     }
 
     table->resizeColumnsToContents();
-    ui->table->setSortingEnabled(true);
+    ui->table->setSortingEnabled( true );
     ui->browser->setHtml( html );
+
+    if ( key.isEmpty() ) return;
+    for ( int row = 0; row < map.size(); ++row )
+    {
+        if ( table->item(row, TCol::key)->text() != key ) continue;
+        for ( int col = 0; col < TCol::count; ++col )
+        {
+            auto item = table->item( row, col );
+            item->setSelected( true );
+        }
+        break;
+    }
 }
 //=======================================================================================
 void MainWindow::on_btn_connect_clicked()

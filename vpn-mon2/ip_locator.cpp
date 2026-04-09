@@ -7,7 +7,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 
-#define qdeb qDebug() << __LINE__ << ": "
+#define qdeb qDebug() << __FILE__ << ":" << __LINE__ << ": "
 
 //=======================================================================================
 static Ip_Locator& singleton()
@@ -97,7 +97,7 @@ static QString clear_org(QString _org)
     QString res = _org;
     if (res.startsWith("AS"))
     {
-        while (res.at(0) != " ") res.remove(0, 1);
+        while (res.at(0) != ' ') res.remove(0, 1);
     }
     res = res.trimmed();
 
@@ -174,7 +174,7 @@ void Ip_Locator::add_to_base( const QByteArray &ip_ , const QByteArray& key )
 
     db.commit();
 
-    qdeb << "add to base" << ip_;
+    qdeb << "add to base" << ip_ << city << org;
 }
 //=======================================================================================
 

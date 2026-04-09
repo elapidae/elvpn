@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>462</width>
+    <width>464</width>
     <height>643</height>
    </rect>
   </property>
@@ -53,7 +53,14 @@
           <property name="font">
            <font>
             <family>Courier 10 Pitch</family>
+            <pointsize>11</pointsize>
            </font>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
           </property>
          </widget>
         </item>
@@ -107,8 +114,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>462</width>
-     <height>20</height>
+     <width>464</width>
+     <height>24</height>
     </rect>
    </property>
   </widget>
